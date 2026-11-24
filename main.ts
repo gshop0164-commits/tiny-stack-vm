@@ -18,7 +18,10 @@ const OPS = [
   [52, 0, 0, 0], [64, 0, 1, 1], [65, 0, 2, 0], [80, 0, 1, 0], [81, 0, 1, 0],
   [82, 0, 0, 1], [83, 0, 1, 0],
 ];
-const BY = new Map(OPS.map((o) => [o[0], o]));
+// Indexed by opcode byte: a direct array lookup is faster than a Map get
+// on every step, and the table above stays the single source of truth.
+const BY = [];
+for (const o of OPS) BY[o[0]] = o;
 
 function run(p: Uint8Array, inp: Uint8Array): { out: Uint8Array; code: number } {
   const n = p.length;
@@ -37,7 +40,7 @@ function run(p: Uint8Array, inp: Uint8Array): { out: Uint8Array; code: number } 
     if (steps === 1000000) return done(10);
     if (pc < 0 || pc >= n) return done(9);
     const opc = p[pc];
-    const o = BY.get(opc);
+    const o = BY[opc];
     if (o === undefined) return done(5);
     const imm = o[1];
     if (pc + imm >= n) return done(9);
